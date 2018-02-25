@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/pizza'
+require_relative '../lib/engine'
+
+def loader(file)
+  lines = IO.readlines(file)
+  params_raw = lines[0].scan /\w+/ 
+
+  raise "error - 4  params not provided" if params_raw.length != 4
+  params = {}
+  params['rows'] = params_raw[0]
+  params['cols'] = params_raw[1]
+  params['mining'] = params_raw[2]
+  params['maxcells'] = params_raw[3]
+  puts "Parameters as per input file are:"
+  puts "  Number of rows: #{params['rows']}"
+  puts "  Number of columns: #{params['cols']}"
+  puts "  Minimum number of each ingredient cells in a slice: #{params['mining']}"
+  puts "  Maximum total number of cells of a slice: #{params['maxcells']}"
+  puts
+  
+  raise "error - not enough lines with ingredients as rows" if lines.length != params['rows'].to_i + 1
+
+  pizza = Pizza.new(params['rows'], params['cols'], params['mining'], params['maxcells'])
+
+  ing_line_count = 0
+
+  lines.each do |l|
+    unless l == lines[0] 
+      row_ings = l.scan /\w/
+      pizza.load_row_ingredients(ing_line_count, row_ings)
+      ing_line_count += 1
+    end
+  end
+
+  raise "error - not processed correct number of lines" if ing_line_count != params['rows'].to_i
+  pizza
+end
+
+
+if __FILE__ == $PROGRAM_NAME
+  puts 'start local execution'
+  @pizza = loader(ARGV[0])
+  @engine = Engine.new(@pizza)
+
+  puts @engine.s_count_w_max_cells
+
+  puts 'end local execution'
+end
+
+
